@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>송례초등학교 - 2026 학생선수 출결 관리 시스템</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons for beautiful UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts - Gothic / Sans Serif -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f3f4f6;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col text-slate-800">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="flex-grow flex items-center justify-center bg-slate-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 max-w-md w-full">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 text-blue-600 mb-4">
+                    <i class="fa-solid fa-graduation-cap text-3xl"></i>
+                </div>
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">송례초등학교</h1>
+                <p class="text-sm text-slate-500 mt-1">학생선수 출결 및 보충학습 관리 시스템</p>
+            </div>
+            
+            <div class="flex p-1 bg-slate-100 rounded-xl mb-6">
+                <button type="button" id="login-tab-parent" onclick="selectLoginMode('parent')" class="flex-1 py-2 text-sm font-bold rounded-lg shadow-sm bg-white text-blue-700 transition-all">학부모</button>
+                <button type="button" id="login-tab-teacher" onclick="selectLoginMode('teacher')" class="flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all">교사</button>
+            </div>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">아이디</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-user text-slate-400"></i>
+                        </div>
+                        <input type="text" id="login-id" required class="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="아이디를 입력하세요">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">비밀번호</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fa-solid fa-lock text-slate-400"></i>
+                        </div>
+                        <input type="password" id="login-pw" required class="w-full pl-10 pr-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm" placeholder="비밀번호를 입력하세요">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors shadow-md mt-4">
+                    로그인
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP CONTENT (Hidden by default) -->
+    <div id="app-content" class="hidden flex-col flex-grow w-full">
+    <!-- TOP HEADER -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="bg-white p-2 rounded-lg text-blue-600 flex items-center justify-center shadow-inner">
+                    <i class="fa-solid fa-graduation-cap text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-black tracking-tight">송례초등학교</h1>
+                    <p class="text-xs text-blue-100 font-medium">2026 학생선수 출결 및 보충학습 관리 시스템</p>
+                </div>
+            </div>
+            
+            <!-- User Session / Switcher -->
+            <div class="flex items-center bg-white/10 p-1.5 rounded-xl border border-white/20">
+                <span class="text-xs font-bold px-3 py-1 text-white mr-1"><i class="fa-solid fa-user-shield mr-1"></i> 현재 모드:</span>
+                <span id="current-mode-indicator" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-white text-blue-700 shadow-sm mr-2">
+                    <!-- dynamically updated -->
+                </span>
+                <button onclick="handleLogout()" class="text-xs font-bold px-3 py-1.5 rounded-lg transition-all duration-200 text-white hover:bg-white/20 bg-rose-500/80 hover:bg-rose-500">
+                    <i class="fa-solid fa-right-from-bracket mr-1"></i> 로그아웃
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        
+        <!-- Info Alert Banner -->
+        <div class="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm">
+            <div class="flex">
+                <div class="flex-shrink-0 text-amber-500">
+                    <i class="fa-solid fa-circle-info text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-bold text-amber-800">2026년도 학생선수 출결 핵심 규정 안내</h3>
+                    <p class="text-xs text-amber-700 mt-1 leading-relaxed">
+                        • <strong>출석인정 허용일수:</strong> 연간 최대 <strong>20일</strong> 범위 내 인정<br>
+                        • <strong>지각, 조퇴, 결과:</strong> 지각, 조퇴, 결과는 <strong>6시간 누적 시 1일</strong>로 간주하여 차감<br>
+                        • <strong>수업결손 보충 필수:</strong> e-School(온라인) 수강 필수 (1일 2시간 이하 결손: 1회차 / 3시간 이상 결손: 2회차 의무 이수)<br>
+                        • <strong>체험학습 불가:</strong> 대회 참가 및 개인 훈련의 사유로는 <strong>교외체험학습 사용 불가</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== [1] PARENT VIEW (학부모 화면) ==================== -->
+        <section id="view-parent" class="space-y-6">
+            <!-- Student Selector & Summary Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Profile / Status Card -->
+                <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">학생선수 정보</span>
+                            <span class="text-xs text-slate-400">학부모 로그인 상태</span>
+                        </div>
+                        <div class="flex items-center space-x-4 mb-6 cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition" onclick="editStudentInfo()">
+                            <div class="w-14 h-14 bg-gradient-to-tr from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-2xl font-black shadow-md flex-shrink-0">
+                                <i class="fa-solid fa-running"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-lg font-bold text-slate-800" id="parent-student-name">6학년 2반 15번 김송례 <i class="fa-solid fa-pen text-xs text-slate-300 ml-1"></i></h2>
+                                <p class="text-sm text-slate-500" id="parent-student-sport">종목: 리틀야구 ⚾</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Usage status Gauge -->
+                    <div class="space-y-3 pt-4 border-t border-slate-100">
+                        <div class="flex justify-between text-xs font-bold text-slate-600">
+                            <span>출석인정 결석일수 사용 현황</span>
+                            <span id="parent-usage-text">5 / 20 일 사용</span>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden flex">
+                            <div id="parent-bar-used" class="bg-blue-600 h-full transition-all duration-500" style="width: 25%"></div>
+                        </div>
+                        <div class="flex justify-between text-[11px] text-slate-400">
+                            <span>남은 일수: <strong class="text-blue-600 text-xs" id="parent-days-left">15일</strong></span>
+                            <span>지각/조퇴 누적: <strong class="text-amber-600 text-xs" id="parent-time-accumulated">4시간</strong> / 6시간</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Information & Guidelines Card -->
+                <div class="lg:col-span-2 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="text-md font-bold text-slate-800 mb-4"><i class="fa-solid fa-list-check text-blue-500 mr-2"></i>학교장확인서 신청 가이드</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs text-slate-600">
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2">
+                            <h4 class="font-bold text-blue-700 flex items-center"><span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] mr-1.5 font-bold">1</span> 신청서 작성 및 제출</h4>
+                            <p class="leading-relaxed">우측 신청서 폼에 대회명, 기간, 사유를 정확하게 기입하고 주최 측에서 발행한 <strong>공문 이미지/파일을 첨부</strong>해 주세요.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2">
+                            <h4 class="font-bold text-blue-700 flex items-center"><span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] mr-1.5 font-bold">2</span> 이스쿨 보충수업 자동 산정</h4>
+                            <p class="leading-relaxed">결손 시간에 맞춰 이수해야 할 이스쿨 강의 차시가 안내됩니다. <strong>대회 전후로 이수를 완료</strong>하여 승인 처리를 받으세요.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2">
+                            <h4 class="font-bold text-blue-700 flex items-center"><span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] mr-1.5 font-bold">3</span> 서류 지참 등교</h4>
+                            <p class="leading-relaxed">대회 종료 후 승인을 위해 <strong>결석신고서, 대회 공문, 학교장확인서</strong> 실물을 지참하여 담임교사에게 제출합니다.</p>
+                        </div>
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-2">
+                            <h4 class="font-bold text-blue-700 flex items-center"><span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] mr-1.5 font-bold">4</span> 담임 교사 최종 처리</h4>
+                            <p class="leading-relaxed">담임 교사가 실제 결석 상황과 이스쿨 이수 여부, 실물 서류를 최종 확인한 후 실제 결석 일수를 차감 관리합니다.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parent Main Section: Request Form & History Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Apply Form (Left/5-cols on desktop) -->
+                <div class="lg:col-span-5 bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                    <h3 class="text-md font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+                        <span><i class="fa-solid fa-file-signature text-blue-600 mr-2"></i>학교장확인서 신청하기</span>
+                        <span class="text-xs text-rose-500 font-medium">* 필수입력</span>
+                    </h3>
+                    <form id="form-apply" class="space-y-4" onsubmit="handleApplySubmit(event)">
+                        <!-- Student Auto-filled Info -->
+                        <div class="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400">신청인 학년/반/번호</label>
+                                <span class="text-xs font-bold text-slate-700" id="apply-student-info">6학년 2반 15번</span>
+                            </div>
+                            <div>
+                                <label class="block text-[11px] font-bold text-slate-400">신청 학생명</label>
+                                <span class="text-xs font-bold text-slate-700" id="apply-student-name">김송례 (야구)</span>
+                            </div>
+                        </div>
+
+                        <!-- Absence Type -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">결석 구분 <span class="text-rose-500">*</span></label>
+                            <select id="apply-absence-type" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                                <option value="결석">결석</option>
+                                <option value="지각">지각</option>
+                                <option value="조퇴">조퇴</option>
+                                <option value="결과">결과</option>
+                            </select>
+                        </div>
+
+                        <!-- Date range picker -->
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">시작일 <span class="text-rose-500">*</span></label>
+                                <input type="date" id="apply-start-date" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updatePreview()">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">종료일 <span class="text-rose-500">*</span></label>
+                                <input type="date" id="apply-end-date" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" onchange="updatePreview()">
+                            </div>
+                        </div>
+                        
+                        <!-- Daily Missing Hours for eSchool calculation -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">1일 예상 수업 결손 시간 <span class="text-rose-500">*</span></label>
+                            <input type="number" id="apply-daily-hours" min="1" max="6" value="6" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" oninput="updatePreview()">
+                        </div>
+
+                        <!-- Days Preview Calculator -->
+                        <div id="apply-days-preview" class="hidden text-xs bg-indigo-50 border border-indigo-100 p-3 rounded-lg text-indigo-800 shadow-inner">
+                            신청 기간: <span class="font-bold" id="preview-dates"></span> 
+                            (총 <span class="font-bold text-sm text-indigo-900" id="preview-days-count">0</span>일 결석 예정)<br>
+                            <span class="text-[11px] text-indigo-600 font-bold mt-1.5 block flex items-center"><i class="fa-solid fa-graduation-cap mr-1"></i> <span id="preview-eschool-guide">e-School 안내</span></span>
+                        </div>
+
+                        <!-- Reason -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">신청 사유 / 대회명 <span class="text-rose-500">*</span></label>
+                            <input type="text" id="apply-reason" placeholder="예) U-12 전국리틀야구대회 참가" required class="w-full text-xs px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <!-- File upload (Official letter) -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">대회 공문 첨부 <span class="text-rose-500">*</span></label>
+                            <div class="relative border-2 border-dashed border-slate-300 rounded-lg p-4 hover:bg-slate-50 hover:border-blue-400 transition cursor-pointer flex flex-col items-center justify-center">
+                                <input type="file" id="apply-file" required class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileChange(this)">
+                                <i class="fa-solid fa-cloud-arrow-up text-slate-400 text-2xl mb-2" id="file-icon"></i>
+                                <span class="text-xs text-slate-600 font-bold" id="file-label">대회 안내 공문 파일 선택</span>
+                                <span class="text-[10px] text-slate-400 mt-1" id="file-sub-label">PDF 또는 이미지 파일만 첨부 가능</span>
+                            </div>
+                        </div>
+
+                        <!-- Warning Checkbox -->
+                        <div class="flex items-start space-x-2 bg-rose-50 p-3 rounded-lg border border-rose-100">
+                            <input type="checkbox" id="apply-confirm" required class="mt-0.5 rounded border-slate-300 text-rose-600 focus:ring-rose-500">
+                            <label for="apply-confirm" class="text-[11px] text-rose-800 font-medium leading-relaxed">
+                                위 기간 동안의 정규수업 결손에 대해 <strong>안내된 e-School 보충학습</strong>을 완수할 것에 동의합니다.
+                            </label>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all duration-150 flex items-center justify-center space-x-2 text-sm mt-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>학교장확인서 신청하기</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Request History List (Right/7-cols on desktop) -->
+                <div class="lg:col-span-7 space-y-4">
+                    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 h-full">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-md font-bold text-slate-800"><i class="fa-solid fa-clock-rotate-left text-slate-500 mr-2"></i>최근 신청 및 처리 이력</h3>
+                            <span class="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full font-bold" id="parent-history-count">0건</span>
+                        </div>
+                        
+                        <!-- History table/list -->
+                        <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                            <table class="min-w-full divide-y divide-slate-100 text-left text-xs whitespace-nowrap">
+                                <thead class="bg-slate-50 font-bold text-slate-500">
+                                    <tr>
+                                        <th class="px-4 py-3">신청일 / 사유</th>
+                                        <th class="px-4 py-3">결석 예정일</th>
+                                        <th class="px-4 py-3 text-center">공문</th>
+                                        <th class="px-4 py-3 text-right">상태</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100" id="parent-history-list">
+                                    <!-- Dynamic rows loaded here -->
+                                </tbody>
+                            </table>
+                            <div id="parent-empty-state" class="hidden py-12 text-center text-slate-400">
+                                <i class="fa-solid fa-folder-open text-4xl mb-2 text-slate-300"></i>
+                                <p class="text-xs mt-2">신청된 이력이 없습니다. 새로운 출석을 신청해 보세요.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ==================== [2] TEACHER VIEW (교사 화면) ==================== -->
+        <section id="view-teacher" class="hidden space-y-6">
+            <!-- Summary Stats Widgets -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xl"><i class="fa-solid fa-users"></i></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">관리 학생선수</span>
+                        <span class="text-xl font-black text-slate-800">1명</span>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center text-amber-600 text-xl"><i class="fa-solid fa-envelope-open-text"></i></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">승인대기 신청</span>
+                        <span class="text-xl font-black text-slate-800" id="stat-pending-count">0건</span>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 text-xl"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">실제 누적 결석일</span>
+                        <span class="text-xl font-black text-slate-800" id="stat-total-used">5일</span>
+                    </div>
+                </div>
+                <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex items-center space-x-4">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center text-indigo-600 text-xl"><i class="fa-solid fa-user-clock"></i></div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block tracking-wider">누적 지각/조퇴/결과</span>
+                        <span class="text-xl font-black text-slate-800" id="stat-time-accumulated">4시간</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Master Student Attendance Management (교사 마스터 테이블) -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-md font-bold text-slate-800"><i class="fa-solid fa-clipboard-user text-blue-600 mr-2"></i>학생선수별 출결 기록</h3>
+                        <p class="text-xs text-slate-500 mt-1">실제 결석 처리 일수 및 지각/조퇴를 시간 단위로 기입하면, 나이스 지침(6시간=1일)에 맞춰 자동 환산됩니다.</p>
+                    </div>
+                    <button onclick="openModalActual()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition duration-150 flex items-center">
+                        <i class="fa-solid fa-pen-to-square mr-1.5"></i> 누적 일수 및 시간 관리
+                    </button>
+                </div>
+
+                <!-- Table for master management -->
+                <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                    <table class="min-w-full divide-y divide-slate-100 text-left text-xs whitespace-nowrap">
+                        <thead class="bg-slate-50 font-bold text-slate-600">
+                            <tr>
+                                <th class="px-4 py-3">학생 정보</th>
+                                <th class="px-4 py-3">종목</th>
+                                <th class="px-4 py-3 text-center">승인된 실제 결석일수</th>
+                                <th class="px-4 py-3 text-center">지각·조퇴·결과 합산</th>
+                                <th class="px-4 py-3 text-center">미인정 환산일수</th>
+                                <th class="px-4 py-3 text-center">총 허용 차감수</th>
+                                <th class="px-4 py-3 text-right">최종 잔여일수</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr class="hover:bg-slate-50">
+                                <td class="px-4 py-4 font-bold text-slate-800">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 shadow-sm"><i class="fa-solid fa-user"></i></div>
+                                        <div>
+                                            <span id="master-student-name">6학년 2반 15번 김송례</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-4 py-4 text-slate-500 font-medium" id="master-student-sport">리틀야구</td>
+                                <td class="px-4 py-4 text-center font-bold text-slate-700 text-sm" id="master-actual-days">5일</td>
+                                <td class="px-4 py-4 text-center text-slate-500">
+                                    <span class="font-bold text-amber-600 text-sm" id="master-accumulated-time">4시간</span> <span class="text-[10px]">/ 6시간</span>
+                                </td>
+                                <td class="px-4 py-4 text-center text-slate-500">
+                                    <span class="font-bold text-rose-600" id="master-converted-days">0일</span>
+                                    <p class="text-[9px] text-slate-400 mt-0.5 tracking-tighter">(6시간당 1일 환산)</p>
+                                </td>
+                                <td class="px-4 py-4 text-center text-indigo-700 font-extrabold text-sm" id="master-total-used">5일 / 20일</td>
+                                <td class="px-4 py-4 text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800" id="master-days-left">
+                                        15일 남음
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Parent Request List (교사 시점 - 확인서 결재 관리) -->
+            <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 border-b border-slate-100 pb-4">
+                    <h3 class="text-md font-bold text-slate-800 flex items-center">
+                        <i class="fa-solid fa-stamp text-blue-600 mr-2"></i>학교장확인서 신청 승인 및 결재함
+                    </h3>
+                    <span class="text-xs text-indigo-700 font-bold bg-indigo-50 px-3 py-1.5 rounded-full border border-indigo-100" id="teacher-pending-label">검토대기 0건</span>
+                </div>
+
+                <!-- Approval Request Table -->
+                <div class="overflow-x-auto border border-slate-100 rounded-xl">
+                    <table class="min-w-full divide-y divide-slate-100 text-left text-xs whitespace-nowrap">
+                        <thead class="bg-slate-50 font-bold text-slate-500">
+                            <tr>
+                                <th class="px-4 py-3">학생명 / 사유</th>
+                                <th class="px-4 py-3">신청 일자 (기간)</th>
+                                <th class="px-4 py-3 text-center">e-School 보충학습 안내</th>
+                                <th class="px-4 py-3 text-center">첨부 공문 확인</th>
+                                <th class="px-4 py-3 text-right">결재 처리 및 상태 변경</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100" id="teacher-request-list">
+                            <!-- Dynamic elements injected here -->
+                        </tbody>
+                    </table>
+                    <div id="teacher-empty-state" class="hidden py-12 text-center text-slate-400">
+                        <i class="fa-solid fa-clipboard-check text-4xl mb-3 text-slate-200"></i>
+                        <p class="text-xs">현재 처리할 학교장확인서 신청 건이 없습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 text-xs py-8 border-t border-slate-800 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="space-y-1 text-center md:text-left">
+                <p class="font-bold text-slate-300">송례초등학교 체육교육부</p>
+                <p class="text-[11px] text-slate-500">ⓒ 2026 학생선수 출결 연계 e-School 보충학습 관리 시스템</p>
+            </div>
+            <div class="flex space-x-6">
+                <a href="https://es.e-school.or.kr/" target="_blank" class="hover:text-white flex items-center space-x-1.5 transition bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-700">
+                    <i class="fa-solid fa-square-envelope text-blue-400"></i>
+                    <span class="font-bold">학생선수 e-School 바로가기</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- MODAL [1]: 수동 결석 및 누적시간 조정 모달 (교사용) -->
+    <div id="modal-actual" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="modal-container">
+            <div class="bg-gradient-to-r from-indigo-600 to-blue-600 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-sliders mr-2"></i>실제 출결 현황 직접 수정</h3>
+                <button onclick="closeModalActual()" class="text-white hover:text-slate-200 text-xl transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-5">
+                <div class="bg-amber-50 border border-amber-100 rounded-lg p-3 text-[11px] text-amber-800 leading-relaxed">
+                    담임 교사는 실제 결손을 확인하고 기재합니다. 지각/조퇴/결과 누적 시간은 <strong class="text-rose-600">6시간 초과 시 자동으로 1일 결석</strong>으로 환산됩니다.
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2">실제 사용한 결석일수 (일 단위)</label>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="changeInput('actual-days-input', -1)" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl flex items-center justify-center font-bold text-lg transition shadow-sm">-</button>
+                            <input type="number" id="actual-days-input" value="0" min="0" max="20" class="w-full text-center text-base font-bold border border-slate-200 rounded-xl py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateModalPreview()">
+                            <button onclick="changeInput('actual-days-input', 1)" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl flex items-center justify-center font-bold text-lg transition shadow-sm">+</button>
+                            <span class="text-sm font-bold text-slate-500 w-8">일</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-2">누적 지각·조퇴·결과 (시간 단위)</label>
+                        <div class="flex items-center space-x-3">
+                            <button onclick="changeInput('accumulated-time-input', -1)" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl flex items-center justify-center font-bold text-lg transition shadow-sm">-</button>
+                            <input type="number" id="accumulated-time-input" value="0" min="0" max="120" class="w-full text-center text-base font-bold border border-slate-200 rounded-xl py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" oninput="updateModalPreview()">
+                            <button onclick="changeInput('accumulated-time-input', 1)" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl flex items-center justify-center font-bold text-lg transition shadow-sm">+</button>
+                            <span class="text-sm font-bold text-slate-500 w-8">시간</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-50 text-indigo-700 p-4 rounded-xl border border-indigo-100 flex justify-between items-center">
+                    <span class="text-xs font-bold">예상 최종 차감일수:</span>
+                    <span id="calculated-total-used-modal" class="font-black text-lg">0일 (잔여 20일)</span>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 flex justify-end space-x-3 border-t border-slate-100">
+                <button onclick="closeModalActual()" class="bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold py-2.5 px-4 rounded-xl transition">취소</button>
+                <button onclick="saveActualAttendance()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition shadow-md">정보 저장 및 적용하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL [2]: 공문 미리보기 모달 -->
+    <div id="modal-preview" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="modal-preview-container">
+            <div class="bg-slate-100 px-6 py-4 flex justify-between items-center border-b border-slate-200">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center"><i class="fa-solid fa-file-invoice text-rose-500 mr-2"></i>첨부 대회 공문 및 증빙서류</h3>
+                <button onclick="closeModalPreview()" class="text-slate-500 hover:text-slate-800 text-xl transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-8 flex flex-col items-center justify-center">
+                <div class="w-full h-72 bg-slate-50 rounded-xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-slate-400 p-6">
+                    <i class="fa-solid fa-file-pdf text-6xl text-rose-500 mb-4 shadow-sm bg-white rounded-xl p-2"></i>
+                    <p class="text-sm font-bold text-slate-800 text-center break-all" id="preview-file-name">야구협회_대회참가요청_공문.pdf</p>
+                    <p class="text-xs text-slate-500 mt-2">안전하게 업로드된 파일입니다.</p>
+                    <div class="mt-6 border-t border-slate-200 pt-6 w-full text-center">
+                        <span class="text-xs text-emerald-700 bg-emerald-50 px-4 py-1.5 rounded-full font-bold border border-emerald-200">
+                            <i class="fa-solid fa-shield-check mr-1.5"></i> 바이러스/악성코드 검증 완료
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 flex justify-between items-center border-t border-slate-200">
+                <div class="flex space-x-2">
+                    <button onclick="previewFile()" class="bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 text-xs font-bold py-2 px-4 rounded-lg transition shadow-sm flex items-center">
+                        <i class="fa-solid fa-eye mr-1.5"></i> 미리보기
+                    </button>
+                    <button onclick="downloadFile()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-bold py-2 px-4 rounded-lg transition shadow-sm flex items-center">
+                        <i class="fa-solid fa-download mr-1.5"></i> 다운로드
+                    </button>
+                </div>
+                <button onclick="closeModalPreview()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold py-2 px-6 rounded-lg transition shadow-md">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL [3]: 학생 정보 수정 모달 (학부모용) -->
+    <div id="modal-student" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden transition-opacity duration-300 opacity-0">
+        <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden transform transition-all duration-300 scale-95" id="modal-student-container">
+            <div class="bg-blue-600 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="font-bold text-sm flex items-center"><i class="fa-solid fa-user-pen mr-2"></i>학생 정보 수정</h3>
+                <button onclick="closeModalStudent()" class="text-white hover:text-slate-200 text-xl transition"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="grid grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">학년</label>
+                        <input type="number" id="edit-student-grade" min="1" max="6" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">반</label>
+                        <input type="number" id="edit-student-class" min="1" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">번호</label>
+                        <input type="number" id="edit-student-num" min="1" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">이름</label>
+                    <input type="text" id="edit-student-name" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">운동 종목</label>
+                    <input type="text" id="edit-student-sport" class="w-full text-sm px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="bg-slate-50 px-6 py-4 flex justify-end space-x-2 border-t border-slate-100">
+                <button onclick="closeModalStudent()" class="bg-white hover:bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold py-2.5 px-4 rounded-xl transition">취소</button>
+                <button onclick="saveStudentInfo()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 px-5 rounded-xl transition shadow">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ALERTS/NOTIFICATIONS POPUP (Toast System) -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-900 text-white text-xs font-bold px-5 py-4 rounded-xl shadow-2xl z-50 flex items-center space-x-3 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-green-400 text-lg"></i>
+        <span id="toast-message" class="tracking-wide">알림 메시지</span>
+    </div>
+
+    <!-- JAVASCRIPT SYSTEM LOGIC -->
+    <script>
+        // --- 1. INITIAL STATE MANAGEMENT ---
+        let currentMode = 'parent'; // 'parent' or 'teacher'
+        let selectedFile = null;
+
+        // Default state
+        const defaultState = {
+            student: {
+                name: '김송례',
+                grade: 6,
+                classNum: 2,
+                num: 15,
+                sport: '리틀야구 ⚾',
+                limitDays: 20,
+                actualDays: 0,
+                accumulatedHours: 0,
+            },
+            requests: []
+        };
+
+        // Load from LocalStorage or use default
+        let state = JSON.parse(localStorage.getItem('sa_app_state')) || defaultState;
+
+        function saveState() {
+            localStorage.setItem('sa_app_state', JSON.stringify(state));
+            renderApp();
+        }
+
+        // --- 2. BOOTSTRAP / ON LOAD ---
+        window.onload = function() {
+            renderApp();
+            
+            // Set default dates in form
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('apply-start-date').value = today;
+            document.getElementById('apply-end-date').value = today;
+            updatePreview();
+        };
+
+        // Switch View Modes (Parent vs. Teacher)
+        function switchMode(mode) {
+            currentMode = mode;
+            const modeIndicator = document.getElementById('current-mode-indicator');
+            const viewParent = document.getElementById('view-parent');
+            const viewTeacher = document.getElementById('view-teacher');
+
+            if (mode === 'parent') {
+                modeIndicator.innerHTML = '<i class="fa-solid fa-user-astronaut mr-1"></i> 학부모';
+                viewParent.classList.remove('hidden');
+                viewTeacher.classList.add('hidden');
+            } else {
+                modeIndicator.innerHTML = '<i class="fa-solid fa-chalkboard-user mr-1"></i> 관리교사';
+                viewParent.classList.add('hidden');
+                viewTeacher.classList.remove('hidden');
+            }
+            renderApp();
+        }
+
+        // --- 3. RENDERING ENGINE ---
+        function renderApp() {
+            // Recalculate converted totals
+            const convertedDaysFromHours = Math.floor(state.student.accumulatedHours / 6);
+            const totalUsedDays = state.student.actualDays + convertedDaysFromHours;
+            const remainingHours = state.student.accumulatedHours % 6;
+            const daysLeft = state.student.limitDays - totalUsedDays;
+
+            const studentLabel = `${state.student.grade}학년 ${state.student.classNum}반 ${state.student.num}번`;
+            const studentNameStr = `${studentLabel} ${state.student.name}`;
+
+            // -- Update Parent UI --
+            document.getElementById('parent-student-name').innerHTML = `${studentNameStr} <i class="fa-solid fa-pen text-xs text-slate-300 ml-1 hover:text-blue-500"></i>`;
+            document.getElementById('parent-student-sport').innerText = `종목: ${state.student.sport}`;
+            document.getElementById('parent-usage-text').innerHTML = `<strong>${totalUsedDays}일</strong> / ${state.student.limitDays}일 사용`;
+            document.getElementById('parent-days-left').innerText = `${daysLeft}일`;
+            document.getElementById('parent-time-accumulated').innerText = `${remainingHours}시간`; // 남은 누적시간만 보여줄지 전체 누적을 보여줄지. 전체로 하려면 state.student.accumulatedHours. 
+            
+            // 폼쪽 자동 채우기
+            document.getElementById('apply-student-info').innerText = studentLabel;
+            document.getElementById('apply-student-name').innerText = `${state.student.name} (${state.student.sport})`;
+
+            const usedPercentage = (totalUsedDays / state.student.limitDays) * 100;
+            const barUsed = document.getElementById('parent-bar-used');
+            barUsed.style.width = `${usedPercentage}%`;
+            if (usedPercentage > 85) {
+                barUsed.className = "bg-rose-500 h-full transition-all duration-500";
+            } else if (usedPercentage > 60) {
+                barUsed.className = "bg-amber-500 h-full transition-all duration-500";
+            } else {
+                barUsed.className = "bg-blue-600 h-full transition-all duration-500";
+            }
+
+            // -- Update Teacher Statistics UI --
+            document.getElementById('stat-total-used').innerText = `${state.student.actualDays}일`;
+            document.getElementById('stat-time-accumulated').innerText = `${state.student.accumulatedHours}시간`;
+            
+            const pendingCount = state.requests.filter(r => r.status === '대기').length;
+            document.getElementById('stat-pending-count').innerText = `${pendingCount}건`;
+            document.getElementById('teacher-pending-label').innerText = `검토대기 ${pendingCount}건`;
+
+            // -- Update Teacher Master Table UI --
+            document.getElementById('master-student-name').innerText = studentNameStr;
+            document.getElementById('master-student-sport').innerText = state.student.sport;
+            document.getElementById('master-actual-days').innerText = `${state.student.actualDays}일`;
+            document.getElementById('master-accumulated-time').innerText = `${state.student.accumulatedHours}시간`;
+            document.getElementById('master-converted-days').innerText = `${convertedDaysFromHours}일`;
+            document.getElementById('master-total-used').innerText = `${totalUsedDays}일 / ${state.student.limitDays}일`;
+            
+            const masterLeftSpan = document.getElementById('master-days-left');
+            masterLeftSpan.innerText = `${daysLeft}일 남음`;
+            if (daysLeft <= 3) {
+                masterLeftSpan.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800";
+            } else if (daysLeft <= 7) {
+                masterLeftSpan.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800";
+            } else {
+                masterLeftSpan.className = "inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800";
+            }
+
+            // -- Render Tables --
+            renderParentHistory();
+            renderTeacherRequestList();
+        }
+
+        // Render Parent Request History List
+        function renderParentHistory() {
+            const listContainer = document.getElementById('parent-history-list');
+            const emptyState = document.getElementById('parent-empty-state');
+            document.getElementById('parent-history-count').innerText = `${state.requests.length}건`;
+
+            if (state.requests.length === 0) {
+                listContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            let html = '';
+            const sortedRequests = [...state.requests].reverse();
+            sortedRequests.forEach(req => {
+                const badgeClass = req.status === '승인' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                   req.status === '반려' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                                   'bg-amber-100 text-amber-800 border border-amber-200';
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition cursor-default">
+                        <td class="px-4 py-4">
+                            <div class="font-bold text-slate-800"><span class="text-xs bg-slate-100 text-slate-500 px-1 py-0.5 rounded mr-1">${req.absenceType || '결석'}</span>${req.reason}</div>
+                            <div class="text-[10px] text-slate-400 mt-1">신청일: ${req.submitDate}</div>
+                        </td>
+                        <td class="px-4 py-4 font-semibold text-slate-700">
+                            ${req.startDate} ~ ${req.endDate}
+                            <span class="block text-[11px] text-indigo-600 font-bold mt-0.5">총 ${req.totalDays}일 (e-School ${req.eSchoolLevel})</span>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <button onclick="viewDocument('${req.fileName}')" class="text-blue-500 hover:text-blue-700 hover:bg-blue-50 p-2 rounded-lg transition" title="${req.fileName}">
+                                <i class="fa-solid fa-file-pdf text-lg"></i>
+                            </button>
+                        </td>
+                        <td class="px-4 py-4 text-right">
+                            <div class="flex flex-col items-end">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${badgeClass}">
+                                    ${req.status}
+                                </span>
+                                ${req.status === '반려' && req.rejectReason ? `<span class="text-[10px] text-rose-500 mt-1 max-w-[150px] truncate" title="${req.rejectReason}">사유: ${req.rejectReason}</span>` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        // Render Teacher's Request List
+        function renderTeacherRequestList() {
+            const listContainer = document.getElementById('teacher-request-list');
+            const emptyState = document.getElementById('teacher-empty-state');
+
+            if (state.requests.length === 0) {
+                listContainer.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            emptyState.classList.add('hidden');
+
+            let html = '';
+            const sortedRequests = [...state.requests].reverse();
+            sortedRequests.forEach(req => {
+                const badgeClass = req.status === '승인' ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' :
+                                   req.status === '반려' ? 'bg-rose-100 text-rose-800 border border-rose-200' :
+                                   'bg-amber-100 text-amber-800 border border-amber-200';
+
+                const actionButtons = req.status === '대기' ? `
+                    <div class="flex justify-end space-x-2">
+                        <button onclick="approveRequest(${req.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow-sm transition">
+                            <i class="fa-solid fa-check mr-1"></i> 승인
+                        </button>
+                        <button onclick="rejectRequest(${req.id})" class="bg-rose-500 hover:bg-rose-600 text-white font-bold py-1.5 px-3 rounded-lg text-xs shadow-sm transition">
+                            <i class="fa-solid fa-ban mr-1"></i> 반려
+                        </button>
+                    </div>
+                ` : `
+                    <div class="flex flex-col items-end space-y-1">
+                        <div class="flex items-center space-x-3">
+                            <span class="text-[11px] font-bold ${badgeClass} px-3 py-1 rounded-full">${req.status} 완료</span>
+                            <button onclick="revertRequest(${req.id})" class="text-[11px] text-slate-400 hover:text-slate-600 underline font-medium">되돌리기</button>
+                        </div>
+                        ${req.status === '반려' && req.rejectReason ? `<span class="text-[10px] text-rose-500 max-w-[150px] truncate" title="${req.rejectReason}">사유: ${req.rejectReason}</span>` : ''}
+                    </div>
+                `;
+
+                html += `
+                    <tr class="hover:bg-slate-50 transition">
+                        <td class="px-4 py-4">
+                            <div class="font-bold text-slate-800">${state.student.name} (${state.student.sport})</div>
+                            <div class="text-slate-500 mt-1"><span class="text-xs bg-slate-100 text-slate-500 px-1 py-0.5 rounded mr-1">${req.absenceType || '결석'}</span>${req.reason}</div>
+                            <div class="text-[10px] text-slate-400 mt-0.5">신청: ${req.submitDate}</div>
+                        </td>
+                        <td class="px-4 py-4 font-semibold text-slate-700">
+                            ${req.startDate} ~ ${req.endDate}
+                            <span class="block text-[11px] text-blue-600 font-bold mt-0.5">합계: ${req.totalDays}일</span>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <span class="bg-indigo-50 text-indigo-700 border border-indigo-100 px-3 py-1.5 rounded-lg font-bold text-xs">${req.eSchoolLevel}</span>
+                            <span class="block text-[10px] text-slate-400 mt-1">1일 결손: ${req.dailyHours}시간 기준</span>
+                        </td>
+                        <td class="px-4 py-4 text-center">
+                            <button onclick="viewDocument('${req.fileName}')" class="bg-white hover:bg-slate-50 text-slate-700 px-3 py-2 rounded-lg border border-slate-200 inline-flex items-center space-x-1.5 transition shadow-sm">
+                                <i class="fa-solid fa-file-pdf text-rose-500 text-sm"></i>
+                                <span class="text-xs font-bold">공문확인</span>
+                            </button>
+                        </td>
+                        <td class="px-4 py-4">
+                            ${actionButtons}
+                        </td>
+                    </tr>
+                `;
+            });
+            listContainer.innerHTML = html;
+        }
+
+        // --- 4. FORM AND LOGIC ---
+        function calculateDaysBetween(startDate, endDate) {
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (isNaN(start) || isNaN(end)) return 0;
+            const diffTime = end - start;
+            if (diffTime < 0) return 0; 
+            return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        }
+
+        function updatePreview() {
+            const start = document.getElementById('apply-start-date').value;
+            const end = document.getElementById('apply-end-date').value;
+            const hours = parseInt(document.getElementById('apply-daily-hours').value) || 0;
+            
+            const days = calculateDaysBetween(start, end);
+            const previewBox = document.getElementById('apply-days-preview');
+            const datesSpan = document.getElementById('preview-dates');
+            const daysCountSpan = document.getElementById('preview-days-count');
+            const eSchoolGuide = document.getElementById('preview-eschool-guide');
+
+            if (days > 0) {
+                previewBox.classList.remove('hidden');
+                datesSpan.innerText = `${start} ~ ${end}`;
+                daysCountSpan.innerText = days;
+                
+                if (hours <= 2) {
+                    eSchoolGuide.innerText = `1일 2시간 이하 결손 -> 1회차 수강 대상`;
+                } else {
+                    eSchoolGuide.innerText = `1일 3시간 이상 결손 -> 2회차 수강 의무`;
+                }
+            } else {
+                previewBox.classList.add('hidden');
+            }
+        }
+
+        function handleFileChange(input) {
+            const label = document.getElementById('file-label');
+            const icon = document.getElementById('file-icon');
+            if (input.files && input.files[0]) {
+                selectedFile = input.files[0].name;
+                label.innerText = selectedFile;
+                label.className = "text-xs text-blue-600 font-bold";
+                icon.className = "fa-solid fa-file-circle-check text-blue-500 text-2xl mb-2";
+            } else {
+                selectedFile = null;
+                label.innerText = "대회 안내 공문 파일 선택";
+                label.className = "text-xs text-slate-600 font-bold";
+                icon.className = "fa-solid fa-cloud-arrow-up text-slate-400 text-2xl mb-2";
+            }
+        }
+
+        function handleApplySubmit(e) {
+            e.preventDefault();
+            const start = document.getElementById('apply-start-date').value;
+            const end = document.getElementById('apply-end-date').value;
+            const reason = document.getElementById('apply-reason').value;
+            const absenceType = document.getElementById('apply-absence-type').value;
+            const dailyHours = parseInt(document.getElementById('apply-daily-hours').value);
+            const days = calculateDaysBetween(start, end);
+
+            if (days <= 0) {
+                showToast("종료일이 시작일보다 빠를 수 없습니다.", "error");
+                return;
+            }
+
+            const eSchoolLevel = dailyHours <= 2 ? '1회차 수강' : '2회차 수강';
+            const fileName = selectedFile || '첨부된공문.pdf';
+
+            const newReq = {
+                id: Date.now(),
+                submitDate: new Date().toISOString().split('T')[0],
+                startDate: start,
+                endDate: end,
+                totalDays: days,
+                dailyHours: dailyHours,
+                absenceType: absenceType,
+                reason: reason,
+                fileName: fileName,
+                eSchoolLevel: eSchoolLevel,
+                status: '대기'
+            };
+
+            state.requests.push(newReq);
+            saveState();
+
+            // Reset form
+            document.getElementById('form-apply').reset();
+            handleFileChange({files:[]});
+            updatePreview();
+            
+            showToast("학교장확인서 신청이 성공적으로 완료되었습니다.");
+        }
+
+        // --- 5. TEACHER ACTIONS ---
+        function approveRequest(id) {
+            const req = state.requests.find(r => r.id === id);
+            if (req) {
+                req.status = '승인';
+                saveState();
+                showToast("신청건을 승인했습니다.");
+            }
+        }
+
+        function rejectRequest(id) {
+            const req = state.requests.find(r => r.id === id);
+            if (req) {
+                const reason = prompt("반려 사유를 입력해주세요:");
+                if (reason === null) return; // cancelled
+                req.status = '반려';
+                req.rejectReason = reason || '사유 없음';
+                saveState();
+                showToast("신청건을 반려했습니다.", "error");
+            }
+        }
+
+        function revertRequest(id) {
+            const req = state.requests.find(r => r.id === id);
+            if (req) {
+                req.status = '대기';
+                saveState();
+                showToast("결재 상태를 대기로 되돌렸습니다.", "info");
+            }
+        }
+
+        // --- 6. MODALS ---
+        // Actual Attendance Modal
+        function openModalActual() {
+            document.getElementById('actual-days-input').value = state.student.actualDays;
+            document.getElementById('accumulated-time-input').value = state.student.accumulatedHours;
+            updateModalPreview();
+
+            const modal = document.getElementById('modal-actual');
+            const container = document.getElementById('modal-container');
+            modal.classList.remove('hidden');
+            // Trigger reflow
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            container.classList.remove('scale-95');
+        }
+
+        function closeModalActual() {
+            const modal = document.getElementById('modal-actual');
+            const container = document.getElementById('modal-container');
+            modal.classList.add('opacity-0');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function changeInput(id, delta) {
+            const input = document.getElementById(id);
+            let val = parseInt(input.value) || 0;
+            val += delta;
+            if (val < 0) val = 0;
+            if (id === 'actual-days-input' && val > 20) val = 20;
+            input.value = val;
+            updateModalPreview();
+        }
+
+        function updateModalPreview() {
+            const d = parseInt(document.getElementById('actual-days-input').value) || 0;
+            const h = parseInt(document.getElementById('accumulated-time-input').value) || 0;
+            
+            const converted = Math.floor(h / 6);
+            const total = d + converted;
+            const rem = state.student.limitDays - total;
+
+            document.getElementById('calculated-total-used-modal').innerText = `${total}일 (잔여 ${rem}일)`;
+        }
+
+        function saveActualAttendance() {
+            const d = parseInt(document.getElementById('actual-days-input').value) || 0;
+            const h = parseInt(document.getElementById('accumulated-time-input').value) || 0;
+            
+            const converted = Math.floor(h / 6);
+            if (d + converted > state.student.limitDays) {
+                showToast("허용된 최대 결석일수(20일)를 초과할 수 없습니다.", "error");
+                return;
+            }
+
+            state.student.actualDays = d;
+            state.student.accumulatedHours = h;
+            saveState();
+            closeModalActual();
+            showToast("실제 출결 현황이 업데이트 되었습니다.");
+        }
+
+        // Preview Modal
+        function viewDocument(fileName) {
+            document.getElementById('preview-file-name').innerText = fileName;
+            const modal = document.getElementById('modal-preview');
+            const container = document.getElementById('modal-preview-container');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            container.classList.remove('scale-95');
+        }
+
+        function closeModalPreview() {
+            const modal = document.getElementById('modal-preview');
+            const container = document.getElementById('modal-preview-container');
+            modal.classList.add('opacity-0');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function previewFile() {
+            const fileName = document.getElementById('preview-file-name').innerText;
+            showToast(`[${fileName}] 문서를 새 창에서 미리보기로 엽니다.`, "info");
+        }
+
+        function downloadFile() {
+            const fileName = document.getElementById('preview-file-name').innerText;
+            showToast(`[${fileName}] 파일 다운로드가 시작되었습니다.`, "success");
+        }
+
+        // Student Edit Modal
+        function editStudentInfo() {
+            document.getElementById('edit-student-grade').value = state.student.grade;
+            document.getElementById('edit-student-class').value = state.student.classNum;
+            document.getElementById('edit-student-num').value = state.student.num;
+            document.getElementById('edit-student-name').value = state.student.name;
+            document.getElementById('edit-student-sport').value = state.student.sport.replace(/ ⚾| ⚽/g, '');
+
+            const modal = document.getElementById('modal-student');
+            const container = document.getElementById('modal-student-container');
+            modal.classList.remove('hidden');
+            void modal.offsetWidth;
+            modal.classList.remove('opacity-0');
+            container.classList.remove('scale-95');
+        }
+
+        function closeModalStudent() {
+            const modal = document.getElementById('modal-student');
+            const container = document.getElementById('modal-student-container');
+            modal.classList.add('opacity-0');
+            container.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function saveStudentInfo() {
+            const g = document.getElementById('edit-student-grade').value;
+            const c = document.getElementById('edit-student-class').value;
+            const n = document.getElementById('edit-student-num').value;
+            const name = document.getElementById('edit-student-name').value;
+            const sport = document.getElementById('edit-student-sport').value;
+
+            if (!g || !c || !n || !name || !sport) {
+                showToast("모든 정보를 입력해주세요.", "error");
+                return;
+            }
+
+            state.student.grade = parseInt(g);
+            state.student.classNum = parseInt(c);
+            state.student.num = parseInt(n);
+            state.student.name = name;
+            state.student.sport = sport;
+            
+            saveState();
+            closeModalStudent();
+            showToast("학생 정보가 수정되었습니다.");
+        }
+
+        // --- 7. TOAST NOTIFICATIONS ---
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-message').innerText = message;
+
+            if (type === 'error') {
+                icon.className = "fa-solid fa-circle-exclamation text-rose-400 text-lg";
+            } else if (type === 'info') {
+                icon.className = "fa-solid fa-circle-info text-blue-400 text-lg";
+            } else {
+                icon.className = "fa-solid fa-circle-check text-green-400 text-lg";
+            }
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            // Clear existing timeout if multiple toasts trigger fast
+            if (window.toastTimeout) clearTimeout(window.toastTimeout);
+            
+            window.toastTimeout = setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- 8. LOGIN LOGIC ---
+        let currentLoginMode = 'parent';
+        function selectLoginMode(mode) {
+            currentLoginMode = mode;
+            const tabParent = document.getElementById('login-tab-parent');
+            const tabTeacher = document.getElementById('login-tab-teacher');
+            
+            if (mode === 'parent') {
+                tabParent.className = "flex-1 py-2 text-sm font-bold rounded-lg shadow-sm bg-white text-blue-700 transition-all";
+                tabTeacher.className = "flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+            } else {
+                tabTeacher.className = "flex-1 py-2 text-sm font-bold rounded-lg shadow-sm bg-white text-blue-700 transition-all";
+                tabParent.className = "flex-1 py-2 text-sm font-bold rounded-lg text-slate-500 hover:text-slate-700 transition-all";
+            }
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            const id = document.getElementById('login-id').value;
+            const pw = document.getElementById('login-pw').value;
+            
+            if (id && pw) {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('login-screen').classList.remove('flex');
+                
+                document.getElementById('app-content').classList.remove('hidden');
+                document.getElementById('app-content').classList.add('flex');
+                
+                // Set app mode based on login selection
+                switchMode(currentLoginMode);
+                showToast(currentLoginMode === 'parent' ? "학부모 모드로 로그인되었습니다." : "교사 모드로 로그인되었습니다.");
+            }
+        }
+
+        function handleLogout() {
+            document.getElementById('login-id').value = '';
+            document.getElementById('login-pw').value = '';
+            
+            document.getElementById('app-content').classList.add('hidden');
+            document.getElementById('app-content').classList.remove('flex');
+            
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.getElementById('login-screen').classList.add('flex');
+            
+            showToast("로그아웃 되었습니다.", "info");
+        }
+    </script>
+    </div> <!-- End app-content -->
+</body>
+</html>
