@@ -6,9 +6,12 @@
     <title>Redirecting...</title>
 </head>
 <body>
-    <p>로그인 화면으로 이동 중입니다...</p>
     <script>
-        window.location.href = "./student-athlete-app/index.html";
+        if (window.location.protocol === 'file:' || window.location.port === '5500' || window.location.port === '3000') {
+            document.write('<div style="position:fixed;top:0;left:0;width:100%;background:#ef4444;color:white;padding:20px;z-index:9999;text-align:center;font-weight:bold;font-size:18px;">⚠️ 잘못된 방식(Live Server)으로 접속하셨습니다. <a href="http://localhost:5173" style="text-decoration:underline;color:#fffa00;">http://localhost:5173</a> 주소로 접속해 주세요! ⚠️</div>');
+        } else {
+            window.location.href = "./student-athlete-app/index.html";
+        }
     </script>
 </body>
 </html>

@@ -34,6 +34,13 @@
 </head>
 <body class="min-h-screen flex flex-col text-slate-800">
 
+    <!-- SERVER WARNING BANNER -->
+    <script>
+        if (window.location.protocol === 'file:' || window.location.port === '5500' || window.location.port === '3000') {
+            document.write('<div style="position:fixed;top:0;left:0;width:100%;background:#ef4444;color:white;padding:20px;z-index:9999;text-align:center;font-weight:bold;font-size:18px;box-shadow: 0 4px 6px rgba(0,0,0,0.1);">⚠️ 현재 잘못된 방식(Live Server 또는 파일 열기)으로 접속하셨습니다. 이 창을 닫고 반드시 <a href="http://localhost:5173" style="text-decoration:underline;color:#fffa00;">http://localhost:5173</a> 주소로 접속해 주세요! ⚠️</div>');
+        }
+    </script>
+
     <!-- LOGIN SCREEN -->
     <div id="login-screen" class="flex-grow flex items-center justify-center bg-slate-50 p-4">
         <div class="bg-white rounded-2xl shadow-xl border border-slate-100 p-8 max-w-md w-full">
